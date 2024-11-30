@@ -8,17 +8,29 @@ from drone_ui.utils.coordination_tools import (
     set_hover_height,
     coordinated_attack)
 
-def world_to_screen(world_pos, camera_x, camera_y, zoom_factor):
-    x = (world_pos[0] + camera_x) * zoom_factor
-    y = (world_pos[1] + camera_y) * zoom_factor
+def world_to_screen(pg_node, world_pos):
+    x = (world_pos[0] + pg_node.camera_x) * pg_node.zoom_factor
+    y = (world_pos[1] + pg_node.camera_y) * pg_node.zoom_factor
     
     return (x, y)
 
-def draw_objects(pg_node, zoom_factor):
+#origin markers
+def generate_origin_markers(pg_node, max_distance):
+    """
+    Generate origin markers scaled for the ui grid.
+    """
+    markers = []
+    for i in range(-max_distance, max_distance + 1):
+        # Scale simulation coordinates to UI coordinates
+        x = pg_node.grid_size * (i / pg_node.grid_scale)
+        markers.append((x, 0))  # Horizontal line (x-axis)
+        markers.append((0, -x))  # Vertical line (y-axis, inverted for UI)
+
+    return markers
+
+def draw_objects(pg_node):
     """
     Draw friendly and enemy drones, with namespaces visible.
-    :param pg_node: The pygame node instance.
-    :param zoom_factor: Current zoom factor for scaling.
     """
     # Create a bold font
     font = pygame.font.Font(None, 12)  # Default font, size 24
@@ -27,27 +39,39 @@ def draw_objects(pg_node, zoom_factor):
 
     # Draw friendly drones
     for fr_obj, fr_drone_pos in pg_node.friendly_drones_positions.items():
-        fr_screen_pos = world_to_screen(fr_drone_pos["ui"], pg_node.camera_x, pg_node.camera_y, zoom_factor)
+        fr_screen_pos = world_to_screen(pg_node, fr_drone_pos["ui"])
         color = (130, 130, 255) if fr_obj in pg_node.selected_drones else (0, 0, 255)
         pygame.draw.circle(pg_node.screen, color, fr_screen_pos, 7)
 
         # Render the namespace as text
-        namespace_surface = font_bold.render(fr_obj, True, (0, 0, 0))  # Black text
+        namespace_surface = font_bold.render(fr_obj, True, (0, 0, 255))  # blue text
         pg_node.screen.blit(namespace_surface, (fr_screen_pos[0] + 12, fr_screen_pos[1] - 12))  # Offset text slightly
 
     # Draw enemy drones
     for en_obj, en_drone_pos in pg_node.enemy_drones_positions.items():
-        en_screen_pos = world_to_screen(en_drone_pos["ui"], pg_node.camera_x, pg_node.camera_y, zoom_factor)
+        en_screen_pos = world_to_screen(pg_node, en_drone_pos["ui"])
         
         color = (150, 0, 0) if en_obj in pg_node.selected_targets else (255, 0, 0)
         color = (0, 0, 0) if en_obj in pg_node.locked_targets else (255, 0, 0)
         pygame.draw.circle(pg_node.screen, color, en_screen_pos, 7)
 
         # Render the namespace as text
-        namespace_surface = font_bold.render(en_obj, True, (0, 0, 0))  # Black text
+        namespace_surface = font_bold.render(en_obj, True, (255, 0, 0))  # red text
         pg_node.screen.blit(namespace_surface, (en_screen_pos[0] + 12, en_screen_pos[1] - 12))  # Offset text slightly
 
-def get_selected_objects(pg_node, start_pos, end_pos, zoom_factor):
+    # draw origin dots
+     # Draw origin markers
+    origin_marker_locations = generate_origin_markers(pg_node, 4)
+    for marker in origin_marker_locations:
+        marker_pos = world_to_screen(pg_node, marker)
+        pygame.draw.circle(pg_node.screen, (0, 0, 0), marker_pos, 3)
+        # marker_screen_pos = world_to_screen(
+        #     pg_node,
+        #     (marker[0] * pg_node.grid_size, -marker[1] * pg_node.grid_size)
+        # )
+        # pygame.draw.circle(pg_node.screen, (0, 255, 0), marker_screen_pos, 4)  # Green dots for origin markers
+
+def get_selected_objects(pg_node, start_pos, end_pos):
     """
     Returns a list of friendly drones within the selection rectangle.
     """
@@ -59,12 +83,12 @@ def get_selected_objects(pg_node, start_pos, end_pos, zoom_factor):
     selected_friendly = []
     selected_targets = []
     for fr_obj, fr_drone_pos in pg_node.friendly_drones_positions.items():
-        fr_screen_pos = world_to_screen(fr_drone_pos["ui"], pg_node.camera_x, pg_node.camera_y, zoom_factor)
+        fr_screen_pos = world_to_screen(pg_node, fr_drone_pos["ui"])
         if x_min <= fr_screen_pos[0] <= x_max and y_min <= fr_screen_pos[1] <= y_max:
             selected_friendly.append(fr_obj)
 
     for tgt_obj, enemy_pos in pg_node.enemy_drones_positions.items():
-        en_screen_pos = world_to_screen(enemy_pos["ui"], pg_node.camera_x, pg_node.camera_y, zoom_factor)
+        en_screen_pos = world_to_screen(pg_node, enemy_pos["ui"])
         if x_min <= en_screen_pos[0] <= x_max and y_min <= en_screen_pos[1] <= y_max:
             selected_targets.append(tgt_obj)
 
@@ -94,20 +118,12 @@ def draw_menu(screen, menu_options, position, font):
     
     return menu_rect
 
-menu_options = [
-    "go_to_goal",
-    "high_altitude",
-    "low_altitude",
-    "attack"
-]
-
-
 def mouse_ui_to_sim(pg_node, mousepos):
     mouse_x = mousepos[0]
     mouse_y = mousepos[1]
 
-    x_sim = ((mouse_x/pg_node.zoom_factor) - pg_node.camera_x)/pg_node.grid_size
-    y_sim = -((mouse_y/pg_node.zoom_factor) - pg_node.camera_y)/pg_node.grid_size
+    x_sim = pg_node.grid_scale*((mouse_x/pg_node.zoom_factor) - pg_node.camera_x)/pg_node.grid_size
+    y_sim = -pg_node.grid_scale*((mouse_y/pg_node.zoom_factor) - pg_node.camera_y)/pg_node.grid_size
 
     sim_pos = (x_sim, y_sim)
     return sim_pos
@@ -147,14 +163,24 @@ def handle_menu_selection(pg_node, option):
 
         for r in list(target_assignment.keys()):
             pg_node.goal_pose_pubs[r].publish(target_assignment[r])
-        
 
-def draw_grid(pg_node, zoom_factor, grid_size, screen_height, screen_width):
-    scaled_grid_size = grid_size * zoom_factor
-    start_x = int((-pg_node.camera_x * zoom_factor) % scaled_grid_size)
-    start_y = int((-pg_node.camera_y * zoom_factor) % scaled_grid_size)
+def draw_grid(pg_node, screen_height, screen_width):
+    """
+    Draws the grid on the screen with proper scaling.
+    """
+    scaled_grid_size = pg_node.grid_size * pg_node.zoom_factor
+    start_x = int((-pg_node.camera_x * pg_node.zoom_factor) % scaled_grid_size)
+    start_y = int((-pg_node.camera_y * pg_node.zoom_factor) % scaled_grid_size)
+    grid_label_step = int(pg_node.grid_scale)
 
     for x in range(start_x, screen_width, int(scaled_grid_size)):
-        pygame.draw.line(pg_node.screen, (0, 0, 0), (x, 0), (x, screen_height))
+        pygame.draw.line(pg_node.screen, (200, 200, 200), (x, 0), (x, screen_height))
+        label_x = (x - start_x) // scaled_grid_size * grid_label_step
+        font = pygame.font.SysFont(None, 18)
+        # pg_node.screen.blit(label, (x + 2, 2))
+
     for y in range(start_y, screen_height, int(scaled_grid_size)):
-        pygame.draw.line(pg_node.screen, (0, 0, 0), (0, y), (screen_width, y))
+        pygame.draw.line(pg_node.screen, (200, 200, 200), (0, y), (screen_width, y))
+        label_y = (y - start_y) // scaled_grid_size * grid_label_step
+        font = pygame.font.SysFont(None, 18)
+        # pg_node.screen.blit(label, (2, y + 2))

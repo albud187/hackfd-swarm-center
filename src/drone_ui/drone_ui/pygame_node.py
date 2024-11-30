@@ -12,7 +12,7 @@ from drone_ui.utils.ui_tools import (world_to_screen,
 import pprint
 import time
 
-grid_scale = 2.0
+grid_scale = 4.0
 
 
 FPS = 60
@@ -24,9 +24,6 @@ is_drawing_rect = False
 rect_start_pos = (0, 0)
 rect_end_pos = (0, 0)
 
-
-
-
 # Variables for panning
 is_panning = False
 pan_start_pos = (0, 0)
@@ -37,7 +34,11 @@ class PygameNode(Node):
 
         super().__init__('pygame_node')
         self.zoom_factor = 1.0
+       
+        #grid size and grid scale MUST be int
         self.grid_size = 50
+        self.grid_scale = 4
+
         self.camera_x = screen_width/(2*self.zoom_factor)
         self.camera_y = screen_height/(2*self.zoom_factor)
 
@@ -89,14 +90,23 @@ class PygameNode(Node):
         print(self.goal_pose_pubs)
         
     def drone_pose_cb(self, msg, ns):
+        """
+        Callback for drone pose updates.
+        Updates positions in UI and simulation space.
+        """
         if ns.startswith("/r"):
-            self.friendly_drones_positions[ns] = {"ui":(self.grid_size * msg.pose.position.x, -self.grid_size * msg.pose.position.y), 
-                                                  "sim": (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)}
+            self.friendly_drones_positions[ns] = {
+                "ui": (self.grid_size * (msg.pose.position.x / self.grid_scale),
+                    -self.grid_size * (msg.pose.position.y / self.grid_scale)),
+                "sim": (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)
+            }
 
         if ns.startswith("/t"):
-            self.enemy_drones_positions[ns] = {"ui":(self.grid_size * msg.pose.position.x, -self.grid_size * msg.pose.position.y), 
-                                                  "sim": (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)}
-
+            self.enemy_drones_positions[ns] = {
+                "ui": (self.grid_size * (msg.pose.position.x / self.grid_scale),
+                    -self.grid_size * (msg.pose.position.y / self.grid_scale)),
+                "sim": (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)
+            }
     def update_pose_subs(self):
         """
         Dynamically updates the pose subscribers for friendly and enemy drones.
@@ -192,7 +202,7 @@ class PygameNode(Node):
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left mouse button
                 is_drawing_rect = False
                 rect_end_pos = pygame.mouse.get_pos()
-                selected_objects = get_selected_objects(self, rect_start_pos, rect_end_pos, self.zoom_factor)
+                selected_objects = get_selected_objects(self, rect_start_pos, rect_end_pos)
                 self.selected_drones = selected_objects["friendly"]
                 self.selected_targets = selected_objects["targets"]
 
@@ -208,8 +218,8 @@ class PygameNode(Node):
         self.screen.fill((255, 255, 255))
 
         # Draw grid
-        draw_grid(self, self.zoom_factor, self.grid_size, screen_height, screen_width)
-        draw_objects(self, self.zoom_factor)
+        draw_grid(self, screen_height, screen_width)
+        draw_objects(self)
         
         # Draw selection rectangle
         if is_drawing_rect:

@@ -20,7 +20,6 @@ WORLD_FILE = os.path.join(WORLD_DIR, "mission_1.world")
 
 CSV_PATH = "/workdir/data/drones_scenario.csv"
 
-
 def read_drones_csv(csv_file):
     """
     Reads a CSV file with columns 'drone_id', 'x_pos', 'y_pos'

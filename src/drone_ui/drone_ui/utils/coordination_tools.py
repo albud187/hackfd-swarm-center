@@ -90,7 +90,7 @@ def coordinated_attack(pg_node):
 
         # Create PoseStamped for the target
         target_pose = PoseStamped()
-        target_pose.header.frame_id = "1"
+        target_pose.header.frame_id = "2"
         target_pose.pose.position.x = pg_node.enemy_drones_positions[target_ns]["sim"][0]
         target_pose.pose.position.y = pg_node.enemy_drones_positions[target_ns]["sim"][1]
         target_pose.pose.position.z = pg_node.enemy_drones_positions[target_ns]["sim"][2]
