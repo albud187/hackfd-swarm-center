@@ -64,8 +64,8 @@ class PygameNode(Node):
         self.selected_targets = []
         self.locked_targets = []
 
-        #get all topics
-        time.sleep(2)
+        #get all topics - wait for all topics
+        time.sleep(3)
         self.topic_list = get_topic_list()
 
         ##get pose topic for subscribers
