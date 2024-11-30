@@ -4,7 +4,6 @@
 #include "geometry_msgs/msg/vector3.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include <mutex>
-#include <thread>
 #include <cmath>
 
 class MotionPlannerNode : public rclcpp::Node
@@ -61,37 +60,75 @@ private:
         current_pose = *msg;
     }
 
-    geometry_msgs::msg::Vector3 calculate_goal_velocity(geometry_msgs::msg::PoseStamped goal_pose, 
-                                                        geometry_msgs::msg::PoseStamped current_pose,
-                                                        float vxy_max,
-                                                        float vz_max)
-    {
+    geometry_msgs::msg::Vector3 calculate_goal_velocity(
+        geometry_msgs::msg::PoseStamped goal_pose,
+        geometry_msgs::msg::PoseStamped current_pose,
+        float vxy_max, float vz_max, float slow_radius){
+        
+        float dt = 1.0;
         geometry_msgs::msg::Vector3 result;
-        float dt = 1.0; //time conversion factor
 
         float dx = goal_pose.pose.position.x - current_pose.pose.position.x;
         float dy = goal_pose.pose.position.y - current_pose.pose.position.y;
         float dz = goal_pose.pose.position.z - current_pose.pose.position.z;
 
         float d_magxy = std::sqrt(dx * dx + dy * dy);
+        float scale_xy = 1.0;
 
-        if (d_magxy/dt > vxy_max){
-            result.x = vxy_max * dx / d_magxy;
-            result.y = vxy_max * dy / d_magxy;
-        } else {
-            result.x = dx/dt;
-            result.y = dy/dt;
+        if (d_magxy*dt < slow_radius){
+            scale_xy = d_magxy / slow_radius;
         }
 
-        if (dz/dt > vz_max){
-            result.z = vz_max;
-        } else {
-            result.z = dz/dt;
+        float target_vxy = vxy_max * scale_xy;
+
+        if (d_magxy*dt > 0){
+            result.x = target_vxy * dx / d_magxy;
+            result.y = target_vxy * dy / d_magxy;
+        }else{
+            result.x = 0.0;
+            result.y = 0.0;
+        }
+
+        if (std::abs(dz*dt) > vz_max){
+            if (dz > 0){
+                result.z = vz_max;
+            }else{
+                result.z = -vz_max;
+            }
+        }else{
+            result.z = dz;
         }
 
         return result;
     }
 
+    geometry_msgs::msg::Vector3 ramp_velocity(
+        geometry_msgs::msg::Vector3 current_velocity,
+        geometry_msgs::msg::Vector3 desired_velocity,
+        float max_acceleration)
+    {
+        geometry_msgs::msg::Vector3 result;
+
+        //acceleration
+        float ax = desired_velocity.x - current_velocity.x;
+        float ay = desired_velocity.y - current_velocity.y;
+        float az = desired_velocity.z - current_velocity.z;
+
+        float a_mag = std::sqrt(ax * ax + ay * ay + az * az);
+
+        if (a_mag > max_acceleration){
+            float scale = max_acceleration / a_mag;
+            ax *= scale;
+            ay *= scale;
+            az *= scale;
+        }
+
+        result.x = current_velocity.x + ax;
+        result.y = current_velocity.y + ay;
+        result.z = current_velocity.z + az;
+
+        return result;
+    }
 
     void publish_velocity_vector()
     {
@@ -106,18 +143,19 @@ private:
                 local_current_pose = current_pose;
             }
 
-            if (local_goal_pose.header.frame_id=="1")
-            {
-                velocity_vector = calculate_goal_velocity(local_goal_pose, local_current_pose, 4, 1);
+            if (local_goal_pose.header.frame_id == "1"){
+                geometry_msgs::msg::Vector3 desired_velocity = calculate_goal_velocity(
+                    local_goal_pose, local_current_pose, 5.0, 5.0, 5.0);
+                velocity_vector = ramp_velocity(velocity_vector, desired_velocity, 1.0);
                 velocity_vector_pub->publish(velocity_vector);
             }
 
-            if (local_goal_pose.header.frame_id=="2")
-            {
-                velocity_vector = calculate_goal_velocity(local_goal_pose, local_current_pose, 10, 3);
+            if (local_goal_pose.header.frame_id == "2"){
+                geometry_msgs::msg::Vector3 desired_velocity = calculate_goal_velocity(
+                    local_goal_pose, local_current_pose, 15.0, 5.0, 5.0);
+                velocity_vector = ramp_velocity(velocity_vector, desired_velocity, 1.0);
                 velocity_vector_pub->publish(velocity_vector);
             }
-
 
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }

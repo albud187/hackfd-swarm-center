@@ -6,7 +6,8 @@ import pprint
 from drone_ui.utils.coordination_tools import (
     coordinated_movement_goals,
     set_hover_height,
-    coordinated_attack)
+    coordinated_attack,
+    show_camera_feeds)
 
 def world_to_screen(pg_node, world_pos):
     x = (world_pos[0] + pg_node.camera_x) * pg_node.zoom_factor
@@ -65,11 +66,6 @@ def draw_objects(pg_node):
     for marker in origin_marker_locations:
         marker_pos = world_to_screen(pg_node, marker)
         pygame.draw.circle(pg_node.screen, (0, 0, 0), marker_pos, 3)
-        # marker_screen_pos = world_to_screen(
-        #     pg_node,
-        #     (marker[0] * pg_node.grid_size, -marker[1] * pg_node.grid_size)
-        # )
-        # pygame.draw.circle(pg_node.screen, (0, 255, 0), marker_screen_pos, 4)  # Green dots for origin markers
 
 def get_selected_objects(pg_node, start_pos, end_pos):
     """
@@ -97,7 +93,6 @@ def get_selected_objects(pg_node, start_pos, end_pos):
         "targets":selected_targets
     }
     return result_selections
-
 
 def draw_menu(screen, menu_options, position, font):
     """
@@ -141,13 +136,13 @@ def handle_menu_selection(pg_node, option):
         for r in pg_node.selected_drones:
             pg_node.goal_pose_pubs[r].publish(fr_goal_poses[r])
        
-    elif option == "high_altitude":
-        fr_goal_poses = set_hover_height(pg_node, 6.0)
+    elif option == "high_hover":
+        fr_goal_poses = set_hover_height(pg_node, 10.0)
         for r in pg_node.selected_drones:
             pg_node.goal_pose_pubs[r].publish(fr_goal_poses[r])
 
-    elif option == "low_altitude":
-        fr_goal_poses = set_hover_height(pg_node, 2.0)
+    elif option == "low_hover":
+        fr_goal_poses = set_hover_height(pg_node, 4.0)
         for r in pg_node.selected_drones:
             pg_node.goal_pose_pubs[r].publish(fr_goal_poses[r])
 
@@ -164,6 +159,7 @@ def handle_menu_selection(pg_node, option):
         for r in list(target_assignment.keys()):
             pg_node.goal_pose_pubs[r].publish(target_assignment[r])
 
+    
 def draw_grid(pg_node, screen_height, screen_width):
     """
     Draws the grid on the screen with proper scaling.

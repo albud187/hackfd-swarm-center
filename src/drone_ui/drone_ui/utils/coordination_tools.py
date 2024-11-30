@@ -4,7 +4,9 @@ from rclpy.node import Node
 from geometry_msgs.msg import Vector3, PoseStamped
 from scipy.optimize import linear_sum_assignment
 import numpy as np
-
+import cv2
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
 
 def coordinated_movement_goals(pg_node, goal_pose):
     all_friendly_positions = pg_node.friendly_drones_positions

@@ -33,7 +33,7 @@ class PygameNode(Node):
     def __init__(self):
 
         super().__init__('pygame_node')
-        self.zoom_factor = 1.0
+        self.zoom_factor = 0.5
        
         #grid size and grid scale MUST be int
         self.grid_size = 50
@@ -52,8 +52,8 @@ class PygameNode(Node):
         self.context_menu_visible = False
         self.context_menu_pos = (0, 0)
         self.context_menu_options = ["go_to_goal",
-                                     "high_altitude",
-                                     "low_altitude",
+                                     "high_hover",
+                                     "low_hover",
                                      "add_targets",
                                      "clear_targets",
                                      "attack"]
