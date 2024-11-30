@@ -159,13 +159,13 @@ class PygameNode(Node):
         
         for fr_obj in self.friendly_drones_positions.keys():
             fr_drone_pos = self.friendly_drones_positions[fr_obj]
-            fr_screen_pos = self.world_to_screen(fr_drone_pos)
+            fr_screen_pos = self.world_to_screen((fr_drone_pos[0], fr_drone_pos[0]))
             pygame.draw.circle(self.screen, (0,0,255), fr_screen_pos, 10)
 
         for en_obj in self.enemy_drones_positions.keys():
             en_drone_pos = self.enemy_drones_positions[en_obj]
-            en_screen_pos = self.world_to_screen(en_drone_pos)
-            pygame.draw.circle(self.screen, (255,0,0), en_screen_pos, 10)
+            en_screen_pos = self.world_to_screen((en_drone_pos[0], en_drone_pos[1]))
+            pygame.draw.circle(self.screen, (255,0,0), (en_screen_pos, 10)
         
         pygame.display.update()
                     
