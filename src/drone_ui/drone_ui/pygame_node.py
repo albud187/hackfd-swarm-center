@@ -1,10 +1,13 @@
 import pygame
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist, Vector3, PoseStamped
+from geometry_msgs.msg import Vector3, PoseStamped
 from drone_ui.utils._constants import *
 from drone_ui.utils.topic_tools import (get_topic_list, filter_topics, get_ns)
-from drone_ui.utils.ui_tools import (world_to_screen, draw_objects, get_selected_drones)
+from drone_ui.utils.ui_tools import (world_to_screen, 
+                                     draw_objects, 
+                                     get_selected_drones,
+                                     draw_menu)
 import pprint
 import time
 grid_size = 50
@@ -20,10 +23,6 @@ rect_start_pos = (0, 0)
 rect_end_pos = (0, 0)
 
 
-# Variables for context menu
-context_menu_visible = False
-context_menu_pos = (0, 0)
-context_menu_options = ['Option 1', 'Option 2']
 
 
 # Variables for panning
@@ -44,6 +43,14 @@ class PygameNode(Node):
         self.FramePerSec = pygame.time.Clock()
         self.FPS = FPS
         self.screen = pygame.display.set_mode((screen_width, screen_height))
+
+        # Variables for context menu
+        self.context_menu_visible = False
+        self.context_menu_pos = (0, 0)
+        self.context_menu_options = ["go_to_goal",
+                                     "high_altitude",
+                                     "low_altitude",
+                                     "attack"]
 
         self.selected_drones = []
 
@@ -154,6 +161,7 @@ class PygameNode(Node):
             elif event.type == pygame.MOUSEMOTION:
                 if is_drawing_rect:
                     rect_end_pos = pygame.mouse.get_pos()
+            
 
         # Draw empty game world with white background and grid
         self.screen.fill((255, 255, 255))
