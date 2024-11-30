@@ -1,7 +1,7 @@
 import pygame
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist, Vector3, Pose
+from geometry_msgs.msg import Twist, Vector3, PoseStamped
 from drone_ui.utils._constants import *
 from drone_ui.utils.topic_tools import (get_topic_list, filter_topics, get_ns)
 import pprint
@@ -51,8 +51,8 @@ class PygameNode(Node):
         """
         Callback for friendly drone pose updates.
         """
-        self.get_logger().info(f"Callback triggered for {f_ns}: x={msg.position.x}, y={msg.position.y}")
-        self.friendly_drones_positions[f_ns] = (grid_size * msg.position.x, -grid_size * msg.position.y)
+        self.get_logger().info(f"Callback triggered for {f_ns}: x={msg.pose.position.x}, y={msg.pose.position.y}")
+        self.friendly_drones_positions[f_ns] = (grid_size * msg.pose.position.x, -grid_size * msg.pose.position.y)
         self.get_logger().info(f"Updated position for {f_ns}: {self.friendly_drones_positions[f_ns]}")
 
 
@@ -67,7 +67,7 @@ class PygameNode(Node):
                 self.get_logger().info(f"Creating subscription for topic: {t}")
                 # Use default arguments in the lambda to correctly bind the namespace
                 self.friendly_pose_subs[f_ns] = self.create_subscription(
-                    Pose,
+                    PoseStamped,
                     t,
                     lambda msg, ns=f_ns: self.fr_pose_cb(msg, ns),
                     20
