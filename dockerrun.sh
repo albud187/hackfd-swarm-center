@@ -2,7 +2,7 @@
 #!/bin/bash
 
 # Container name
-CONTAINER_NAME=""
+CONTAINER_NAME="swarm-ui-ws"
 
 # Directory for volume mounting your ros2_ws for persistent storage
 WORKDIR="/workdir"
