@@ -7,8 +7,8 @@ from drone_ui.utils.topic_tools import (get_topic_list, filter_topics, get_ns)
 from drone_ui.utils.ui_tools import (world_to_screen, 
                                      draw_objects, 
                                      draw_grid,
-                                     get_selected_drones,
-                                     draw_menu, handle_menu_selection)
+                                     get_selected_objects,
+                                     draw_menu, handle_menu_selection,)
 import pprint
 import time
 
@@ -53,9 +53,15 @@ class PygameNode(Node):
         self.context_menu_options = ["go_to_goal",
                                      "high_altitude",
                                      "low_altitude",
+                                     "add_targets",
+                                     "clear_targets",
                                      "attack"]
 
         self.selected_drones = []
+
+        self.attack_mode = False
+        self.selected_targets = []
+        self.locked_targets = []
 
         #get all topics
         time.sleep(2)
@@ -173,7 +179,7 @@ class PygameNode(Node):
                 elif event.key == pygame.K_DOWN:
                     self.camera_y -= 20 / self.zoom_factor
 
-            #draw selection rectangle
+            #draw selection for friendly drones rectangle
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
                 is_drawing_rect = True
                 rect_start_pos = pygame.mouse.get_pos()
@@ -186,20 +192,17 @@ class PygameNode(Node):
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left mouse button
                 is_drawing_rect = False
                 rect_end_pos = pygame.mouse.get_pos()
-                self.selected_drones = get_selected_drones(self, rect_start_pos, rect_end_pos, self.zoom_factor)
-                print(self.selected_drones)
+                selected_objects = get_selected_objects(self, rect_start_pos, rect_end_pos, self.zoom_factor)
+                self.selected_drones = selected_objects["friendly"]
+                self.selected_targets = selected_objects["targets"]
 
             # Show context menu on right-click
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:  # Right mouse button
-                if self.selected_drones:
+                if self.selected_drones or self.selected_targets:
                     self.context_menu_visible = True
                     self.context_menu_pos = pygame.mouse.get_pos()
                 else:
                     self.context_menu_visible = False
-            try:            
-                print(self.context_menu_visible, event.type, event.button)
-            except:
-                pass
 
         # Draw empty game world with white background and grid
         self.screen.fill((255, 255, 255))

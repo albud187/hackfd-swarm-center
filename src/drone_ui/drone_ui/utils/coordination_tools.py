@@ -59,3 +59,20 @@ def coordinated_movement_goals(pg_node, goal_pose):
             goal_poses[r] = drone_goal
 
     return goal_poses
+
+def set_hover_height(pg_node, hover_height):
+    all_friendly_positions = pg_node.friendly_drones_positions
+   
+    goal_poses = {}
+    for r in pg_node.selected_drones:
+        drone_goal = PoseStamped()
+        drone_goal.header.frame_id = "1"
+        drone_goal.pose.position.x = all_friendly_positions[r]["sim"][0]
+        drone_goal.pose.position.y = all_friendly_positions[r]["sim"][1]
+        drone_goal.pose.position.z = hover_height
+        goal_poses[r] = drone_goal
+
+    return goal_poses
+
+def coordinated_attack(pg_node):
+    pass

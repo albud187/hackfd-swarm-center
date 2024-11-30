@@ -3,7 +3,9 @@ import pygame
 import rclpy
 from rclpy.node import Node
 import pprint
-from drone_ui.utils.coordination_tools import coordinated_movement_goals
+from drone_ui.utils.coordination_tools import (
+    coordinated_movement_goals,
+    set_hover_height)
 
 def world_to_screen(world_pos, camera_x, camera_y, zoom_factor):
     x = (world_pos[0] + camera_x) * zoom_factor
@@ -35,13 +37,16 @@ def draw_objects(pg_node, zoom_factor):
     # Draw enemy drones
     for en_obj, en_drone_pos in pg_node.enemy_drones_positions.items():
         en_screen_pos = world_to_screen(en_drone_pos["ui"], pg_node.camera_x, pg_node.camera_y, zoom_factor)
-        pygame.draw.circle(pg_node.screen, (255, 0, 0), en_screen_pos, 7)
+        
+        color = (150, 0, 0) if en_obj in pg_node.selected_targets else (255, 0, 0)
+        color = (0, 0, 0) if en_obj in pg_node.locked_targets else (255, 0, 0)
+        pygame.draw.circle(pg_node.screen, color, en_screen_pos, 7)
 
         # Render the namespace as text
         namespace_surface = font_bold.render(en_obj, True, (0, 0, 0))  # Black text
         pg_node.screen.blit(namespace_surface, (en_screen_pos[0] + 12, en_screen_pos[1] - 12))  # Offset text slightly
 
-def get_selected_drones(pg_node, start_pos, end_pos, zoom_factor):
+def get_selected_objects(pg_node, start_pos, end_pos, zoom_factor):
     """
     Returns a list of friendly drones within the selection rectangle.
     """
@@ -50,12 +55,23 @@ def get_selected_drones(pg_node, start_pos, end_pos, zoom_factor):
     y_min = min(start_pos[1], end_pos[1])
     y_max = max(start_pos[1], end_pos[1])
 
-    selected = []
+    selected_friendly = []
+    selected_targets = []
     for fr_obj, fr_drone_pos in pg_node.friendly_drones_positions.items():
         fr_screen_pos = world_to_screen(fr_drone_pos["ui"], pg_node.camera_x, pg_node.camera_y, zoom_factor)
         if x_min <= fr_screen_pos[0] <= x_max and y_min <= fr_screen_pos[1] <= y_max:
-            selected.append(fr_obj)
-    return selected
+            selected_friendly.append(fr_obj)
+
+    for tgt_obj, enemy_pos in pg_node.enemy_drones_positions.items():
+        en_screen_pos = world_to_screen(enemy_pos["ui"], pg_node.camera_x, pg_node.camera_y, zoom_factor)
+        if x_min <= en_screen_pos[0] <= x_max and y_min <= en_screen_pos[1] <= y_max:
+            selected_targets.append(tgt_obj)
+
+    result_selections = {
+        "friendly": selected_friendly,
+        "targets":selected_targets
+    }
+    return result_selections
 
 
 def draw_menu(screen, menu_options, position, font):
@@ -105,22 +121,28 @@ def handle_menu_selection(pg_node, option):
         mouse_pos = pygame.mouse.get_pos()
         real_pos = mouse_ui_to_sim(pg_node, mouse_pos)
         fr_goal_poses = coordinated_movement_goals(pg_node, real_pos)
-        pprint.pprint(fr_goal_poses)
-
         for r in pg_node.selected_drones:
-
             pg_node.goal_pose_pubs[r].publish(fr_goal_poses[r])
        
-        # Add logic to set altitude here
     elif option == "high_altitude":
-        print(f"high altitude for: {pg_node.selected_drones}")
-        # Add logic to send drones to goal
+        fr_goal_poses = set_hover_height(pg_node, 6.0)
+        for r in pg_node.selected_drones:
+            pg_node.goal_pose_pubs[r].publish(fr_goal_poses[r])
+
     elif option == "low_altitude":
-        print(f"low altitude for: {pg_node.selected_drones}")
-        # Add logic to send drones to goal
+        fr_goal_poses = set_hover_height(pg_node, 2.0)
+        for r in pg_node.selected_drones:
+            pg_node.goal_pose_pubs[r].publish(fr_goal_poses[r])
+
+    elif option == "add_targets":
+        pg_node.locked_targets = pg_node.selected_targets
+
+    elif option == "clear_targets":
+        pg_node.locked_targets = []
     elif option == "attack":
-        print(f"attack command for: {pg_node.selected_drones}")
-        # Add logic to attack target  
+        print(f"attack command for: {pg_node.selected_drones} to attack {pg_node.locked_targets}")
+  
+        
 
 def draw_grid(pg_node, zoom_factor, grid_size, screen_height, screen_width):
     scaled_grid_size = grid_size * zoom_factor
