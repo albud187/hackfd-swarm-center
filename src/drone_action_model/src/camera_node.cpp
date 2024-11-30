@@ -11,7 +11,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 
-
 class UserCameraNode : public rclcpp::Node
 {
 public:
@@ -21,7 +20,7 @@ public:
         std::string T_cam_img = ns + "/front/image_raw";
 
         cam_ui_sub = this->create_subscription<sensor_msgs::msg::Image>(
-            T_cam_img, 10, std::bind(&UserCameraNode::camera_image_cb, this, std::placeholders::_1));
+            T_cam_img, rclcpp::QoS(10), std::bind(&UserCameraNode::camera_image_cb, this, std::placeholders::_1));
 
     }
 
@@ -44,8 +43,8 @@ private:
             cv::resize(cv_ptr->image, resized_image, cv::Size(), scale_factor, scale_factor);
 
             cv::imshow(image_title, resized_image);
-            cv::waitKey(1);
-        }catch (const cv_bridge::Exception& e) {
+            cv::waitKey(1); 
+        } catch (const cv_bridge::Exception& e) {
             RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
         }
     }
@@ -54,9 +53,13 @@ private:
 
 int main(int argc, char *argv[]) {
     rclcpp::init(argc, argv);
+    
     auto rclcppNode = std::make_shared<UserCameraNode>();
+    
+    rclcpp::executors::MultiThreadedExecutor executor; 
+    executor.add_node(rclcppNode);
 
-    rclcpp::spin(rclcppNode);
+    executor.spin();
 
     rclcpp::shutdown();
     return 0;

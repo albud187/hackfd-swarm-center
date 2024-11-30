@@ -118,14 +118,6 @@ def drone_bringup(ns):
         ]
 
         drone_result = drone_result + fr_drone_result
-
-        # result.append(
-        #     Node(
-        #         package="drone_action_model",
-        #         executable="camera_node",
-        #         namespace=ns
-        #         )
-        #     )
         
     return drone_result
 
