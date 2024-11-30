@@ -62,16 +62,39 @@ def set_hover_height(pg_node, hover_height):
     return goal_poses
 
 def coordinated_attack(pg_node):
+    """
+    Assign attackers (selected drones) to targets using linear sum assignment.
+    """
     attackers = pg_node.selected_drones
-    targets = pg_node.locked_targets
+    targets = pg_node.locked_targets  # Assuming targets have been pre-selected
 
+    if not attackers or not targets:
+        print("No attackers or targets available for assignment.")
+        return {}
 
-    num_attackers = len(attackers)
-    num_targets = len(targets)
+    # Extract positions of attackers and targets
+    attacker_positions = np.array([pg_node.friendly_drones_positions[attacker]["sim"][:2] for attacker in attackers])
+    target_positions = np.array([pg_node.enemy_drones_positions[target]["sim"][:2] for target in targets])
 
-    cost_matrix = np.zeros((num_attackers, num_targets))
+    # Calculate cost matrix based on Euclidean distance
+    cost_matrix = np.linalg.norm(attacker_positions[:, None, :] - target_positions[None, :, :], axis=2)
 
-    attacker_positions = {}
-    target_positions = {}
-    #populate cost matrix with distances
-    pass
+    # Solve the assignment problem
+    row_indices, col_indices = linear_sum_assignment(cost_matrix)
+
+    # Create assignment dictionary
+    assignments = {}
+    for attacker_idx, target_idx in zip(row_indices, col_indices):
+        attacker_ns = attackers[attacker_idx]
+        target_ns = targets[target_idx]
+
+        # Create PoseStamped for the target
+        target_pose = PoseStamped()
+        target_pose.header.frame_id = "1"
+        target_pose.pose.position.x = pg_node.enemy_drones_positions[target_ns]["sim"][0]
+        target_pose.pose.position.y = pg_node.enemy_drones_positions[target_ns]["sim"][1]
+        target_pose.pose.position.z = pg_node.enemy_drones_positions[target_ns]["sim"][2]
+
+        assignments[attacker_ns] = target_pose
+
+    return assignments

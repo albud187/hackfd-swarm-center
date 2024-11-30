@@ -5,7 +5,8 @@ from rclpy.node import Node
 import pprint
 from drone_ui.utils.coordination_tools import (
     coordinated_movement_goals,
-    set_hover_height)
+    set_hover_height,
+    coordinated_attack)
 
 def world_to_screen(world_pos, camera_x, camera_y, zoom_factor):
     x = (world_pos[0] + camera_x) * zoom_factor
@@ -139,9 +140,13 @@ def handle_menu_selection(pg_node, option):
 
     elif option == "clear_targets":
         pg_node.locked_targets = []
+    
     elif option == "attack":
+        target_assignment = coordinated_attack(pg_node)
         print(f"attack command for: {pg_node.selected_drones} to attack {pg_node.locked_targets}")
-  
+
+        for r in list(target_assignment.keys()):
+            pg_node.goal_pose_pubs[r].publish(target_assignment[r])
         
 
 def draw_grid(pg_node, zoom_factor, grid_size, screen_height, screen_width):
