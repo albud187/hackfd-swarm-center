@@ -18,7 +18,7 @@ XACRO_FILE_PATH = os.path.join(get_package_share_directory("sjtu_drone_descripti
 WORLD_DIR = "/workdir/assets/worlds"
 WORLD_FILE = os.path.join(WORLD_DIR, "mission_1.world")
 
-CSV_PATH = "/workdir/data/drones_scenario.csv"
+CSV_PATH = "/workdir/data/scenario1.csv"
 
 def read_drones_csv(csv_file):
     """
