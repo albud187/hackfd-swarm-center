@@ -78,3 +78,13 @@ def handle_menu_selection(pg_node, option):
     elif option == "attack":
         print(f"Attacking target with drones: {pg_node.selected_drones}")
         # Add logic to attack target  
+
+def draw_grid(pg_node, zoom_factor, grid_size, screen_height, screen_width):
+    scaled_grid_size = grid_size * zoom_factor
+    start_x = int((-pg_node.camera_x * zoom_factor) % scaled_grid_size)
+    start_y = int((-pg_node.camera_y * zoom_factor) % scaled_grid_size)
+
+    for x in range(start_x, screen_width, int(scaled_grid_size)):
+        pygame.draw.line(pg_node.screen, (0, 0, 0), (x, 0), (x, screen_height))
+    for y in range(start_y, screen_height, int(scaled_grid_size)):
+        pygame.draw.line(pg_node.screen, (0, 0, 0), (0, y), (screen_width, y))

@@ -6,6 +6,7 @@ from drone_ui.utils._constants import *
 from drone_ui.utils.topic_tools import (get_topic_list, filter_topics, get_ns)
 from drone_ui.utils.ui_tools import (world_to_screen, 
                                      draw_objects, 
+                                     draw_grid,
                                      get_selected_drones,
                                      draw_menu)
 import pprint
@@ -167,15 +168,7 @@ class PygameNode(Node):
         self.screen.fill((255, 255, 255))
 
         # Draw grid
-        scaled_grid_size = grid_size * zoom_factor
-        start_x = int((-self.camera_x * zoom_factor) % scaled_grid_size)
-        start_y = int((-self.camera_y * zoom_factor) % scaled_grid_size)
-
-        for x in range(start_x, screen_width, int(scaled_grid_size)):
-            pygame.draw.line(self.screen, (0, 0, 0), (x, 0), (x, screen_height))
-        for y in range(start_y, screen_height, int(scaled_grid_size)):
-            pygame.draw.line(self.screen, (0, 0, 0), (0, y), (screen_width, y))
-
+        draw_grid(self, zoom_factor, grid_size, screen_height, screen_width)
         draw_objects(self, zoom_factor)
         
         # Draw selection rectangle
