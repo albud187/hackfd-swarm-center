@@ -30,7 +30,6 @@ def filter_topics(all_topics, ns_pfx, topic_name):
     return result_list
 
 
-
 def get_ns(input_topic):
     result_ns = "/"+ input_topic.split("/")[1]
     return result_ns

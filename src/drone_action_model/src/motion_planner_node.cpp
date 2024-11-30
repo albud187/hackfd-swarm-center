@@ -114,7 +114,7 @@ private:
 
             if (local_goal_pose.header.frame_id=="2")
             {
-                velocity_vector = calculate_goal_velocity(local_goal_pose, local_current_pose, 15, 4);
+                velocity_vector = calculate_goal_velocity(local_goal_pose, local_current_pose, 10, 3);
                 velocity_vector_pub->publish(velocity_vector);
             }
 
