@@ -177,9 +177,10 @@ class PygameNode(Node):
                 else:
                     print("Mouse click outside menu bounds")
                     self.context_menu_visible = False
-
+                    
+            # Panning the view with arrow keys
             elif event.type == pygame.KEYDOWN:
-                # Panning the view with arrow keys
+                
                 if event.key == pygame.K_LEFT:
                     self.camera_x += 20 / self.zoom_factor
                 elif event.key == pygame.K_RIGHT:
@@ -189,6 +190,31 @@ class PygameNode(Node):
                 elif event.key == pygame.K_DOWN:
                     self.camera_y -= 20 / self.zoom_factor
 
+
+            # Handle zoom using mouse wheel
+            elif event.type == pygame.MOUSEBUTTONDOWN and (event.button == 4 or event.button==5):
+                if event.button in (4, 5):  # Scroll up (zoom in) or down (zoom out)
+                    mouse_pos = pygame.mouse.get_pos()
+
+                    # Convert mouse position to world coordinates
+                    world_mouse_x = mouse_pos[0] / self.zoom_factor - self.camera_x
+                    world_mouse_y = mouse_pos[1] / self.zoom_factor - self.camera_y
+
+                    # Adjust zoom factor
+                    old_zoom_factor = self.zoom_factor
+                    if event.button == 4:  # Scroll up
+                        self.zoom_factor *= 1.1
+                        if self.zoom_factor > 5:  # Max zoom limit
+                            self.zoom_factor = 5
+                    elif event.button == 5:  # Scroll down
+                        self.zoom_factor /= 1.1
+                        if self.zoom_factor < 0.5:  # Min zoom limit
+                            self.zoom_factor = 0.5
+
+                    # Adjust camera position to keep the zoom centered on the mouse position
+                    self.camera_x = mouse_pos[0] / self.zoom_factor - world_mouse_x
+                    self.camera_y = mouse_pos[1] / self.zoom_factor - world_mouse_y
+                    
             #draw selection for friendly drones rectangle
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
                 is_drawing_rect = True
