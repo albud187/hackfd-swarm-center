@@ -2,7 +2,8 @@
 import pygame
 import rclpy
 from rclpy.node import Node
-
+import pprint
+from drone_ui.utils.coordination_tools import coordinated_movement_goals
 
 def world_to_screen(world_pos, camera_x, camera_y, zoom_factor):
     x = (world_pos[0] + camera_x) * zoom_factor
@@ -103,11 +104,13 @@ def handle_menu_selection(pg_node, option):
         print(f"go to goal for: {pg_node.selected_drones}")
         mouse_pos = pygame.mouse.get_pos()
         real_pos = mouse_ui_to_sim(pg_node, mouse_pos)
-        print(real_pos)
+        fr_goal_poses = coordinated_movement_goals(pg_node, real_pos)
+        pprint.pprint(fr_goal_poses)
 
-        
-        #for ns in pg_node.selected_drones:
-            #pass
+        for r in pg_node.selected_drones:
+
+            pg_node.goal_pose_pubs[r].publish(fr_goal_poses[r])
+       
         # Add logic to set altitude here
     elif option == "high_altitude":
         print(f"high altitude for: {pg_node.selected_drones}")
