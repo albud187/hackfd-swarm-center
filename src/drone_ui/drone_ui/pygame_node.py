@@ -12,6 +12,7 @@ from drone_ui.utils.ui_tools import (world_to_screen,
 import pprint
 import time
 grid_size = 50
+grid_scale = 2.0
 
 zoom_factor = 1.0
 FPS = 60
@@ -36,8 +37,8 @@ class PygameNode(Node):
 
         super().__init__('pygame_node')
 
-        self.camera_x = screen_width/2
-        self.camera_y = screen_height/2
+        self.camera_x = screen_width/(2*zoom_factor)
+        self.camera_y = screen_height/(2*zoom_factor)
 
         pygame.init()
         pygame.display.set_caption("pygame_node")
@@ -155,7 +156,7 @@ class PygameNode(Node):
                         selected_option = self.context_menu_options[index]
                         print(f"Menu option selected: {selected_option}")
                         handle_menu_selection(self, selected_option)
-                    self.context_menu_visible = False
+                        self.context_menu_visible = False
                 else:
                     print("Mouse click outside menu bounds")
                     self.context_menu_visible = False
@@ -194,10 +195,6 @@ class PygameNode(Node):
                     self.context_menu_pos = pygame.mouse.get_pos()
                 else:
                     self.context_menu_visible = False
-
-            # Handle left-click for menu selection
-
-            
             try:            
                 print(self.context_menu_visible, event.type, event.button)
             except:
