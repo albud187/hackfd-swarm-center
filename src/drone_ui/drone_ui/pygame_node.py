@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, Vector3, Pose
 from drone_ui.utils._constants import *
-from drone_ui.utils.topic_tools import (get_topic_list, filter_topics)
+from drone_ui.utils.topic_tools import (get_topic_list, filter_topics, get_ns)
 import pprint
 grid_size = 50
 
@@ -30,25 +30,16 @@ class PygameNode(Node):
         self.game_object = {'pos': (0, 0), 'radius': 20}
 
         self.topic_list = get_topic_list()
-        print("XXXXXX")
-        print("XXXXXX")
-        print("XXXXXX")
-
-        pprint.pprint(self.topic_list)
-        print("XXXXXX")
-        print("XXXXXX")
-        print("XXXXXX")
-        self.friendly_drones = {}
+        self.friendly_pose_topics = filter_topics(self.topic_list, "/r", "RPY_pose")
+        self.enemy_pose_topics = filter_topics(self.topic_list, "/t", "RPY_pose")
         self.friendly_pose_subs = {}
+        self.friendly_drones_positions = {}
 
-        self.enemy_drones = {}
-        self.enemy_pose_subs = {}
-
-    def pose_cb(self, msg, ns):
-        if ns[0]=="r":
-            self.friendly_drones[ns] = (msg.position.x, msg.position.y)
-        if ns[0] == "t":
-            self.enemy_drones[ns] = (msg.position.x, msg.positiony)
+        self.update_pose_subs()
+        
+        
+    def fr_pose_cb(self, msg, f_ns):
+        self.friendly_drones_positions[f_ns] = (grid_size*msg.position.x, -grid_size*msg.position.y)
 
     def update_pose_subs(self):
         """
@@ -57,16 +48,9 @@ class PygameNode(Node):
         description: updates the pose subscribers, adding more as more drones are spawned in the simulation
         updates both friendly drones and enemy drones based on namespace prefix
         """
-
-        
-
-
-
-
-        pass
-
-    def drone_pose_cb(self, msg):
-        self.game_object['pos'] = (grid_size*msg.position.x, -grid_size*msg.position.y)
+        for t in self.friendly_pose_topics:
+            f_ns = get_ns(t)
+            self.friendly_pose_subs[f_ns] = self.create_subscription(Pose, t, self.fr_pose_cb(f_ns), 20)
 
     def world_to_screen(self, world_pos):
         x = (world_pos[0] + self.camera_x) * zoom_factor
@@ -119,7 +103,9 @@ class PygameNode(Node):
             pygame.draw.line(self.screen, (0, 0, 0), (0, y), (screen_width, y))
 
         obj_screen_pos = self.world_to_screen(self.game_object['pos'])
-        pygame.draw.circle(self.screen, (255,0,0), obj_screen_pos, self.game_object['radius'])
+        for fr_obj in self.friendly_drones_positions.keys():
+            fr_drone_pos = self.friendly_drones_positions[fr_obj]
+            pygame.draw.circle(self.screen, (0,255,0), fr_drone_pos, 30)
 
         pygame.display.update()
                     
