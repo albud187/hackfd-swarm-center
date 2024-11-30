@@ -73,8 +73,9 @@ private:
 
     geometry_msgs::msg::Twist get_command_velocity(geometry_msgs::msg::Vector3 vel_vector, geometry_msgs::msg::PoseStamped drone_pose){
         geometry_msgs::msg::Twist result_cmd_vel;
-
-        float W_max = 5;
+        
+    
+        float W_max = 15;
         float Vxy = sqrt(pow(vel_vector.x, 2)+pow(vel_vector.y,2));
         float heading = atan2(vel_vector.y, vel_vector.x);
         
@@ -86,6 +87,10 @@ private:
         result_cmd_vel.linear.y = Vxy*sin(d_yaw)+vel_vector.z*sin(d_roll);
         result_cmd_vel.linear.z = vel_vector.z*cos(d_pitch)+vel_vector.x*sin(d_pitch)+vel_vector.y*sin(d_roll);
         
+        
+        //need to tweak gotogoal or strike mode
+        // if Vxy <1 for go to goal (goal pose hader = 1)
+        // if Vxy <3 for strike (goal pose header = 2 )
         if ( Vxy < 1){
             result_cmd_vel.angular.z = 0;
         } else {

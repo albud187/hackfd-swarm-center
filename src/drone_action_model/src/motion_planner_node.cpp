@@ -61,32 +61,37 @@ private:
         current_pose = *msg;
     }
 
-    geometry_msgs::msg::Vector3 calculate_velocity_vector(geometry_msgs::msg::PoseStamped goal_pose, geometry_msgs::msg::PoseStamped current_pose)
+    geometry_msgs::msg::Vector3 calculate_goal_velocity(geometry_msgs::msg::PoseStamped goal_pose, 
+                                                        geometry_msgs::msg::PoseStamped current_pose,
+                                                        float vxy_max,
+                                                        float vz_max)
     {
-        float vxy_max = 5.0;
-        float vz_max = 2.5;
+        geometry_msgs::msg::Vector3 result;
+        float dt = 1.0; //time conversion factor
 
         float dx = goal_pose.pose.position.x - current_pose.pose.position.x;
         float dy = goal_pose.pose.position.y - current_pose.pose.position.y;
         float dz = goal_pose.pose.position.z - current_pose.pose.position.z;
+
         float d_magxy = std::sqrt(dx * dx + dy * dy);
 
-        geometry_msgs::msg::Vector3 result;
-        if (d_mag > 0.0)
-        {
+        if (d_magxy/dt > vxy_max){
             result.x = vxy_max * dx / d_magxy;
             result.y = vxy_max * dy / d_magxy;
-            result.z = vz_max * dz / 10;
+        } else {
+            result.x = dx/dt;
+            result.y = dy/dt;
         }
-        else
-        {
-            result.x = 0.0;
-            result.y = 0.0;
-            result.z = 0.0;
+
+        if (dz/dt > vz_max){
+            result.z = vz_max;
+        } else {
+            result.z = dz/dt;
         }
 
         return result;
     }
+
 
     void publish_velocity_vector()
     {
@@ -101,11 +106,18 @@ private:
                 local_current_pose = current_pose;
             }
 
-            if (!local_goal_pose.header.frame_id.empty())
+            if (local_goal_pose.header.frame_id=="1")
             {
-                velocity_vector = calculate_velocity_vector(local_goal_pose, local_current_pose);
+                velocity_vector = calculate_goal_velocity(local_goal_pose, local_current_pose, 4, 1);
                 velocity_vector_pub->publish(velocity_vector);
             }
+
+            if (local_goal_pose.header.frame_id=="2")
+            {
+                velocity_vector = calculate_goal_velocity(local_goal_pose, local_current_pose, 15, 4);
+                velocity_vector_pub->publish(velocity_vector);
+            }
+
 
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
