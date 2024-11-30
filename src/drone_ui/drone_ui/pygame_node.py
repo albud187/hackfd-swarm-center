@@ -14,7 +14,7 @@ import time
 grid_size = 50
 grid_scale = 2.0
 
-zoom_factor = 1.0
+
 FPS = 60
 screen_width = 800
 screen_height = 600
@@ -36,9 +36,9 @@ class PygameNode(Node):
     def __init__(self):
 
         super().__init__('pygame_node')
-
-        self.camera_x = screen_width/(2*zoom_factor)
-        self.camera_y = screen_height/(2*zoom_factor)
+        self.zoom_factor = 1.0
+        self.camera_x = screen_width/(2*self.zoom_factor)
+        self.camera_y = screen_height/(2*self.zoom_factor)
 
         pygame.init()
         pygame.display.set_caption("pygame_node")
@@ -164,13 +164,13 @@ class PygameNode(Node):
             elif event.type == pygame.KEYDOWN:
                 # Panning the view with arrow keys
                 if event.key == pygame.K_LEFT:
-                    self.camera_x += 20 / zoom_factor
+                    self.camera_x += 20 / self.zoom_factor
                 elif event.key == pygame.K_RIGHT:
-                    self.camera_x -= 20 / zoom_factor
+                    self.camera_x -= 20 / self.zoom_factor
                 elif event.key == pygame.K_UP:
-                    self.camera_y += 20 / zoom_factor
+                    self.camera_y += 20 / self.zoom_factor
                 elif event.key == pygame.K_DOWN:
-                    self.camera_y -= 20 / zoom_factor
+                    self.camera_y -= 20 / self.zoom_factor
 
             #draw selection rectangle
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
@@ -185,7 +185,7 @@ class PygameNode(Node):
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left mouse button
                 is_drawing_rect = False
                 rect_end_pos = pygame.mouse.get_pos()
-                self.selected_drones = get_selected_drones(self, rect_start_pos, rect_end_pos, zoom_factor)
+                self.selected_drones = get_selected_drones(self, rect_start_pos, rect_end_pos, self.zoom_factor)
                 print(self.selected_drones)
 
             # Show context menu on right-click
@@ -204,8 +204,8 @@ class PygameNode(Node):
         self.screen.fill((255, 255, 255))
 
         # Draw grid
-        draw_grid(self, zoom_factor, grid_size, screen_height, screen_width)
-        draw_objects(self, zoom_factor)
+        draw_grid(self, self.zoom_factor, grid_size, screen_height, screen_width)
+        draw_objects(self, self.zoom_factor)
         
         # Draw selection rectangle
         if is_drawing_rect:
