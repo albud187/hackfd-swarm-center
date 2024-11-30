@@ -13,6 +13,11 @@ FPS = 60
 screen_width = 800
 screen_height = 600
 
+# Variables for selection rectangle
+is_drawing_rect = False
+rect_start_pos = (0, 0)
+rect_end_pos = (0, 0)
+selected_drones = []
 
 # Variables for context menu
 context_menu_visible = False
@@ -67,16 +72,14 @@ class PygameNode(Node):
         self.update_pose_subs()
 
         ##genereate pose topic publishers
-
-        self.goal_pose_topics = filter_topics(self.topic_list, "/", "goal_pose")
+        self.goal_pose_topics = filter_topics(self.topic_list, "/r", "goal_pose")
 
         self.goal_pose_pubs = {}
         for gp in self.goal_pose_topics:
             f_ns_gp = get_ns(gp)
             self.goal_pose_pubs[f_ns_gp] = self.create_publisher(PoseStamped, gp, 10)
         
-        
-        print(self.friendly_pose_subs)
+        print(self.goal_pose_pubs)
         
     def fr_pose_cb(self, msg, f_ns):
         """
@@ -95,7 +98,7 @@ class PygameNode(Node):
         Dynamically updates the pose subscribers for friendly and enemy drones.
         """
         for tfd in self.friendly_pose_topics:
-            print(f"Attempting to update subscriptions for topic: {tfd}")
+        
             f_ns = get_ns(tfd)
             if f_ns not in self.friendly_pose_subs:
                 # Use default arguments in the lambda to correctly bind the namespace
@@ -107,7 +110,7 @@ class PygameNode(Node):
                 )
         
         for ted in self.enemy_pose_topics:
-            print(f"Attempting to update subscriptions for topic: {ted}")
+           
             e_ns = get_ns(ted)
             if e_ns not in self.friendly_pose_subs:
                 # Use default arguments in the lambda to correctly bind the namespace
@@ -136,7 +139,8 @@ class PygameNode(Node):
         pygame.quit()
 
     def render(self):
-        print(self.friendly_drones_positions)
+        global is_drawing_rect, rect_start_pos, rect_end_pos, selected_drones
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.display.quit()
@@ -156,11 +160,23 @@ class PygameNode(Node):
                 elif event.key == pygame.K_DOWN:
                     self.camera_y -= 20 / zoom_factor
 
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
+                is_drawing_rect = True
+                rect_start_pos = pygame.mouse.get_pos()
+                rect_end_pos = rect_start_pos
 
-        #draw empty game world with white square and grid
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left mouse button
+                is_drawing_rect = False
+                rect_end_pos = pygame.mouse.get_pos()
+                selected_drones = self.get_selected_drones(rect_start_pos, rect_end_pos)
+
+            elif event.type == pygame.MOUSEMOTION:
+                if is_drawing_rect:
+                    rect_end_pos = pygame.mouse.get_pos()
+
+        # Draw empty game world with white background and grid
         self.screen.fill((255, 255, 255))
 
-        #draw grid
         # Draw grid
         scaled_grid_size = grid_size * zoom_factor
         start_x = int((-self.camera_x * zoom_factor) % scaled_grid_size)
@@ -171,18 +187,42 @@ class PygameNode(Node):
         for y in range(start_y, screen_height, int(scaled_grid_size)):
             pygame.draw.line(self.screen, (0, 0, 0), (0, y), (screen_width, y))
 
-        
-        for fr_obj in self.friendly_drones_positions.keys():
-            fr_drone_pos = self.friendly_drones_positions[fr_obj]
+        # Draw friendly drones
+        for fr_obj, fr_drone_pos in self.friendly_drones_positions.items():
             fr_screen_pos = self.world_to_screen((fr_drone_pos[0], fr_drone_pos[1]))
-            pygame.draw.circle(self.screen, (0,0,255), fr_screen_pos, 10)
+            color = (130, 130, 255) if fr_obj in selected_drones else (0, 0, 255)
+            pygame.draw.circle(self.screen, color, fr_screen_pos, 10)
 
-        for en_obj in self.enemy_drones_positions.keys():
-            en_drone_pos = self.enemy_drones_positions[en_obj]
+        # Draw enemy drones
+        for en_obj, en_drone_pos in self.enemy_drones_positions.items():
             en_screen_pos = self.world_to_screen((en_drone_pos[0], en_drone_pos[1]))
-            pygame.draw.circle(self.screen, (255,0,0), en_screen_pos, 10)
-        
+            pygame.draw.circle(self.screen, (255, 0, 0), en_screen_pos, 10)
+
+        # Draw selection rectangle
+        if is_drawing_rect:
+            rect_x = min(rect_start_pos[0], rect_end_pos[0])
+            rect_y = min(rect_start_pos[1], rect_end_pos[1])
+            rect_width = abs(rect_end_pos[0] - rect_start_pos[0])
+            rect_height = abs(rect_end_pos[1] - rect_start_pos[1])
+            pygame.draw.rect(self.screen, (0, 255, 0), (rect_x, rect_y, rect_width, rect_height), 2)
+
         pygame.display.update()
+
+    def get_selected_drones(self, start_pos, end_pos):
+        """
+        Returns a list of friendly drones within the selection rectangle.
+        """
+        x_min = min(start_pos[0], end_pos[0])
+        x_max = max(start_pos[0], end_pos[0])
+        y_min = min(start_pos[1], end_pos[1])
+        y_max = max(start_pos[1], end_pos[1])
+
+        selected = []
+        for fr_obj, fr_drone_pos in self.friendly_drones_positions.items():
+            fr_screen_pos = self.world_to_screen((fr_drone_pos[0], fr_drone_pos[1]))
+            if x_min <= fr_screen_pos[0] <= x_max and y_min <= fr_screen_pos[1] <= y_max:
+                selected.append(fr_obj)
+        return selected
                     
 def main(args=None):
     rclpy.init(args=args)
