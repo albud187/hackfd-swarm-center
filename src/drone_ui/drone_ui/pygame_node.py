@@ -11,13 +11,13 @@ from drone_ui.utils.ui_tools import (world_to_screen,
                                      draw_menu, handle_menu_selection)
 import pprint
 import time
-grid_size = 50
+
 grid_scale = 2.0
 
 
 FPS = 60
 screen_width = 800
-screen_height = 600
+screen_height = 800
 
 # Variables for selection rectangle
 is_drawing_rect = False
@@ -37,6 +37,7 @@ class PygameNode(Node):
 
         super().__init__('pygame_node')
         self.zoom_factor = 1.0
+        self.grid_size = 50
         self.camera_x = screen_width/(2*self.zoom_factor)
         self.camera_y = screen_height/(2*self.zoom_factor)
 
@@ -83,11 +84,11 @@ class PygameNode(Node):
         
     def drone_pose_cb(self, msg, ns):
         if ns.startswith("/r"):
-            self.friendly_drones_positions[ns] = {"ui":(grid_size * msg.pose.position.x, -grid_size * msg.pose.position.y), 
+            self.friendly_drones_positions[ns] = {"ui":(self.grid_size * msg.pose.position.x, -self.grid_size * msg.pose.position.y), 
                                                   "sim": (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)}
 
         if ns.startswith("/t"):
-            self.enemy_drones_positions[ns] = {"ui":(grid_size * msg.pose.position.x, -grid_size * msg.pose.position.y), 
+            self.enemy_drones_positions[ns] = {"ui":(self.grid_size * msg.pose.position.x, -self.grid_size * msg.pose.position.y), 
                                                   "sim": (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)}
 
     def update_pose_subs(self):
@@ -204,7 +205,7 @@ class PygameNode(Node):
         self.screen.fill((255, 255, 255))
 
         # Draw grid
-        draw_grid(self, self.zoom_factor, grid_size, screen_height, screen_width)
+        draw_grid(self, self.zoom_factor, self.grid_size, screen_height, screen_width)
         draw_objects(self, self.zoom_factor)
         
         # Draw selection rectangle

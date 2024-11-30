@@ -85,9 +85,13 @@ menu_options = [
 
 
 def mouse_ui_to_sim(pg_node, mousepos):
-    
+    mouse_x = mousepos[0]
+    mouse_y = mousepos[1]
 
-    sim_pos = (0,0)
+    x_sim = ((mouse_x/pg_node.zoom_factor) - pg_node.camera_x)/pg_node.grid_size
+    y_sim = -((mouse_y/pg_node.zoom_factor) - pg_node.camera_y)/pg_node.grid_size
+
+    sim_pos = (x_sim, y_sim)
     return sim_pos
 
 def handle_menu_selection(pg_node, option):
@@ -97,9 +101,13 @@ def handle_menu_selection(pg_node, option):
     print(option)
     if option == "go_to_goal":
         print(f"go to goal for: {pg_node.selected_drones}")
-        for ns in pg_node.selected_drones:
-            #get goal pose x,y
-            pass
+        mouse_pos = pygame.mouse.get_pos()
+        real_pos = mouse_ui_to_sim(pg_node, mouse_pos)
+        print(real_pos)
+
+        
+        #for ns in pg_node.selected_drones:
+            #pass
         # Add logic to set altitude here
     elif option == "high_altitude":
         print(f"high altitude for: {pg_node.selected_drones}")
