@@ -103,9 +103,7 @@ def drone_bringup(ns):
             package="drone_action_model",
             executable="kinematics_node",
             namespace=ns,
-            output="screen",
-            prefix="xterm -e"
-        ),
+        )
 
     ]
     return result
