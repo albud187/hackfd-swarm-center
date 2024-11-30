@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist, Vector3, Pose
 from drone_ui.utils._constants import *
 from drone_ui.utils.topic_tools import (get_topic_list, filter_topics, get_ns)
 import pprint
+import time
 grid_size = 50
 
 zoom_factor = 1.0
@@ -27,30 +28,52 @@ class PygameNode(Node):
         self.FPS = FPS
         self.screen = pygame.display.set_mode((screen_width, screen_height))
 
-        self.game_object = {'pos': (0, 0), 'radius': 20}
+        #self.game_object = {'pos': (0, 0), 'radius': 20}
 
+        #get all topics
         self.topic_list = get_topic_list()
         self.friendly_pose_topics = filter_topics(self.topic_list, "/r", "RPY_pose")
-        self.enemy_pose_topics = filter_topics(self.topic_list, "/t", "RPY_pose")
-        self.friendly_pose_subs = {}
-        self.friendly_drones_positions = {}
 
+        #init friendly positions as 0,0
+        self.friendly_drones_positions = {}
+        for t in self.friendly_pose_topics:
+            f_ns = get_ns(t)
+            self.friendly_drones_positions[f_ns] = (0,0)
+
+        self.friendly_pose_subs = {}
         self.update_pose_subs()
+       
+        time.sleep(2)
         
+        print(self.friendly_pose_subs)
         
     def fr_pose_cb(self, msg, f_ns):
-        self.friendly_drones_positions[f_ns] = (grid_size*msg.position.x, -grid_size*msg.position.y)
+        """
+        Callback for friendly drone pose updates.
+        """
+        self.get_logger().info(f"Callback triggered for {f_ns}: x={msg.position.x}, y={msg.position.y}")
+        self.friendly_drones_positions[f_ns] = (grid_size * msg.position.x, -grid_size * msg.position.y)
+        self.get_logger().info(f"Updated position for {f_ns}: {self.friendly_drones_positions[f_ns]}")
+
 
     def update_pose_subs(self):
         """
-        inputs: str fr_ns, str en_ns
-        outputs: none
-        description: updates the pose subscribers, adding more as more drones are spawned in the simulation
-        updates both friendly drones and enemy drones based on namespace prefix
+        Dynamically updates the pose subscribers for friendly drones.
         """
         for t in self.friendly_pose_topics:
+            print(f"Attempting to update subscriptions for topic: {t}")
             f_ns = get_ns(t)
-            self.friendly_pose_subs[f_ns] = self.create_subscription(Pose, t, self.fr_pose_cb(f_ns), 20)
+            if f_ns not in self.friendly_pose_subs:
+                self.get_logger().info(f"Creating subscription for topic: {t}")
+                # Use default arguments in the lambda to correctly bind the namespace
+                self.friendly_pose_subs[f_ns] = self.create_subscription(
+                    Pose,
+                    t,
+                    lambda msg, ns=f_ns: self.fr_pose_cb(msg, ns),
+                    20
+                )
+                self.get_logger().info(f"Subscription created for namespace: {f_ns}")
+
 
     def world_to_screen(self, world_pos):
         x = (world_pos[0] + self.camera_x) * zoom_factor
@@ -70,6 +93,7 @@ class PygameNode(Node):
         pygame.quit()
 
     def render(self):
+        print(self.friendly_drones_positions)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.display.quit()
@@ -102,11 +126,13 @@ class PygameNode(Node):
         for y in range(start_y, screen_height, int(scaled_grid_size)):
             pygame.draw.line(self.screen, (0, 0, 0), (0, y), (screen_width, y))
 
-        obj_screen_pos = self.world_to_screen(self.game_object['pos'])
+        
         for fr_obj in self.friendly_drones_positions.keys():
             fr_drone_pos = self.friendly_drones_positions[fr_obj]
-            pygame.draw.circle(self.screen, (0,255,0), fr_drone_pos, 30)
-
+            obj_screen_pos = self.world_to_screen(fr_drone_pos)
+            
+            pygame.draw.circle(self.screen, (0,0,255), obj_screen_pos, 10)
+        
         pygame.display.update()
                     
 def main(args=None):
