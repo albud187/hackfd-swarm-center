@@ -93,7 +93,13 @@ def drone_bringup(ns):
             package="drone_action_model",
             executable="state_reporter_node",
             namespace=ns
-        )
+        ),
+        Node(
+        package="drone_action_model",
+        executable="motion_planner_node",
+        namespace=ns
+        ),
+
     ]
     return result
 
