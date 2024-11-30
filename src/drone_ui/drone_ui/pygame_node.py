@@ -8,7 +8,7 @@ from drone_ui.utils.ui_tools import (world_to_screen,
                                      draw_objects, 
                                      draw_grid,
                                      get_selected_drones,
-                                     draw_menu)
+                                     draw_menu, handle_menu_selection)
 import pprint
 import time
 grid_size = 50
@@ -131,12 +131,34 @@ class PygameNode(Node):
     def render(self):
         global is_drawing_rect, rect_start_pos, rect_end_pos
         for event in pygame.event.get():
+            
             if event.type == pygame.QUIT:
                 pygame.display.quit()
                 pygame.quit()
                 self.destroy_node()
                 rclpy.shutdown()
                 quit()
+
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.context_menu_visible:
+                
+                mouse_pos = pygame.mouse.get_pos()
+                menu_rect = pygame.Rect(
+                    self.context_menu_pos[0],
+                    self.context_menu_pos[1],
+                    200,
+                    len(self.context_menu_options) * 30
+                )
+                if menu_rect.collidepoint(mouse_pos):
+                    
+                    index = (mouse_pos[1] - self.context_menu_pos[1]) // 30
+                    if 0 <= index < len(self.context_menu_options):
+                        selected_option = self.context_menu_options[index]
+                        print(f"Menu option selected: {selected_option}")
+                        handle_menu_selection(self, selected_option)
+                    self.context_menu_visible = False
+                else:
+                    print("Mouse click outside menu bounds")
+                    self.context_menu_visible = False
 
             elif event.type == pygame.KEYDOWN:
                 # Panning the view with arrow keys
@@ -149,20 +171,37 @@ class PygameNode(Node):
                 elif event.key == pygame.K_DOWN:
                     self.camera_y -= 20 / zoom_factor
 
+            #draw selection rectangle
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
                 is_drawing_rect = True
                 rect_start_pos = pygame.mouse.get_pos()
                 rect_end_pos = rect_start_pos
+            elif event.type == pygame.MOUSEMOTION:
+                if is_drawing_rect:
+                    rect_end_pos = pygame.mouse.get_pos()
 
+            # get selected drones after drawing selection rectangle
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left mouse button
                 is_drawing_rect = False
                 rect_end_pos = pygame.mouse.get_pos()
                 self.selected_drones = get_selected_drones(self, rect_start_pos, rect_end_pos, zoom_factor)
                 print(self.selected_drones)
-            elif event.type == pygame.MOUSEMOTION:
-                if is_drawing_rect:
-                    rect_end_pos = pygame.mouse.get_pos()
+
+            # Show context menu on right-click
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:  # Right mouse button
+                if self.selected_drones:
+                    self.context_menu_visible = True
+                    self.context_menu_pos = pygame.mouse.get_pos()
+                else:
+                    self.context_menu_visible = False
+
+            # Handle left-click for menu selection
+
             
+            try:            
+                print(self.context_menu_visible, event.type, event.button)
+            except:
+                pass
 
         # Draw empty game world with white background and grid
         self.screen.fill((255, 255, 255))
@@ -179,6 +218,8 @@ class PygameNode(Node):
             rect_height = abs(rect_end_pos[1] - rect_start_pos[1])
             pygame.draw.rect(self.screen, (0, 255, 0), (rect_x, rect_y, rect_width, rect_height), 2)
 
+        if self.context_menu_visible:
+            draw_menu(self.screen, self.context_menu_options, self.context_menu_pos, pygame.font.SysFont(None, 24))
         pygame.display.update()
 
 def main(args=None):

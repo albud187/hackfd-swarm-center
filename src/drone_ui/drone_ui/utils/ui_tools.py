@@ -66,17 +66,18 @@ def handle_menu_selection(pg_node, option):
     """
     Perform actions based on the selected context menu option.
     """
+    print(option)
     if option == "go_to_goal":
-        print(f"Setting altitude high for drones: {pg_node.selected_drones}")
+        print(f"go to goal for: {pg_node.selected_drones}")
         # Add logic to set altitude here
     elif option == "high_altitude":
-        print(f"Sending drones to goal: {pg_node.selected_drones}")
+        print(f"high altitude for: {pg_node.selected_drones}")
         # Add logic to send drones to goal
     elif option == "low_altitude":
-        print(f"Sending drones to goal: {pg_node.selected_drones}")
+        print(f"low altitude for: {pg_node.selected_drones}")
         # Add logic to send drones to goal
     elif option == "attack":
-        print(f"Attacking target with drones: {pg_node.selected_drones}")
+        print(f"attack command for: {pg_node.selected_drones}")
         # Add logic to attack target  
 
 def draw_grid(pg_node, zoom_factor, grid_size, screen_height, screen_width):
