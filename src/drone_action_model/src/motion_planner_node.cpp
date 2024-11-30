@@ -157,7 +157,7 @@ private:
                 velocity_vector_pub->publish(velocity_vector);
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(4));
         }
     }
 };

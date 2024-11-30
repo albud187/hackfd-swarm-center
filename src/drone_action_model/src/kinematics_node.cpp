@@ -98,7 +98,7 @@ private:
         while (rclcpp::ok()){
             geometry_msgs::msg::Twist command_velocity = get_command_velocity(velocity_vector, current_pose);
             velocity_pub->publish(command_velocity);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(4));
         }
     }
 };

@@ -27,6 +27,7 @@ public:
 
 private:
     std::mutex mutex_;
+    double scale_factor = 0.6;
     std::string ns = this->get_namespace();
     std::string image_title = ns + "/front/image_raw";
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr cam_ui_sub;
@@ -38,7 +39,11 @@ private:
     void camera_image_cb(const sensor_msgs::msg::Image::SharedPtr msg){
         try {
             cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-            cv::imshow(image_title, cv_ptr->image);
+
+            cv::Mat resized_image;
+            cv::resize(cv_ptr->image, resized_image, cv::Size(), scale_factor, scale_factor);
+
+            cv::imshow(image_title, resized_image);
             cv::waitKey(1);
         }catch (const cv_bridge::Exception& e) {
             RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());

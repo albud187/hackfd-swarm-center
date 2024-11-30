@@ -89,22 +89,13 @@ def drone_bringup(ns):
 
     #add more nodes here
     
-    result = [
+    drone_result = [
         Node(
             package="drone_action_model",
             executable="state_reporter_node",
             namespace=ns
         ),
-        Node(
-        package="drone_action_model",
-        executable="motion_planner_node",
-        namespace=ns
-        ),
-        Node(
-            package="drone_action_model",
-            executable="kinematics_node",
-            namespace=ns,
-        ),
+
         # Node(
         #     package="drone_action_model",
         #     executable="camera_node",
@@ -112,16 +103,31 @@ def drone_bringup(ns):
         #     )
     ]
 
-    if "r" in ns:
-        result.append(
+    if ns.startswith("r"):
+        fr_drone_result = [
+            Node(
+            package="drone_action_model",
+            executable="motion_planner_node",
+            namespace=ns
+            ),
             Node(
                 package="drone_action_model",
-                executable="camera_node",
-                namespace=ns
-                )
+                executable="kinematics_node",
+                namespace=ns,
             )
+        ]
+
+        drone_result = drone_result + fr_drone_result
+
+        # result.append(
+        #     Node(
+        #         package="drone_action_model",
+        #         executable="camera_node",
+        #         namespace=ns
+        #         )
+        #     )
         
-    return result
+    return drone_result
 
 def multi_drone_bringup(R_NS):
     result = []

@@ -6,8 +6,7 @@ import pprint
 from drone_ui.utils.coordination_tools import (
     coordinated_movement_goals,
     set_hover_height,
-    coordinated_attack,
-    show_camera_feeds)
+    coordinated_attack)
 
 def world_to_screen(pg_node, world_pos):
     x = (world_pos[0] + pg_node.camera_x) * pg_node.zoom_factor

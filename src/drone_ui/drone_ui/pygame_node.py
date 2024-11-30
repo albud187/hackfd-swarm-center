@@ -33,7 +33,7 @@ class PygameNode(Node):
     def __init__(self):
 
         super().__init__('pygame_node')
-        self.zoom_factor = 0.5
+        self.zoom_factor = 1
        
         #grid size and grid scale MUST be int
         self.grid_size = 50
@@ -65,7 +65,7 @@ class PygameNode(Node):
         self.locked_targets = []
 
         #get all topics - wait for all topics
-        time.sleep(3)
+        time.sleep(4)
         self.topic_list = get_topic_list()
 
         ##get pose topic for subscribers
