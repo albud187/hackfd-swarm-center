@@ -88,6 +88,7 @@ def multi_drone_description(R_NS, init_poses):
 def drone_bringup(ns):
 
     #add more nodes here
+    
     result = [
         Node(
             package="drone_action_model",
@@ -103,9 +104,23 @@ def drone_bringup(ns):
             package="drone_action_model",
             executable="kinematics_node",
             namespace=ns,
-        )
-
+        ),
+        # Node(
+        #     package="drone_action_model",
+        #     executable="camera_node",
+        #     namespace=ns
+        #     )
     ]
+
+    if "r" in ns:
+        result.append(
+            Node(
+                package="drone_action_model",
+                executable="camera_node",
+                namespace=ns
+                )
+            )
+        
     return result
 
 def multi_drone_bringup(R_NS):

@@ -11,6 +11,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(cv_bridge)
+find_package(OpenCV)
 
 # find dependencies (messages)
 find_package(std_msgs REQUIRED)
@@ -22,16 +24,18 @@ find_package(sensor_msgs REQUIRED)
 add_executable(state_reporter_node src/state_reporter_node.cpp)
 add_executable(motion_planner_node src/motion_planner_node.cpp)
 add_executable(kinematics_node src/kinematics_node.cpp)
+add_executable(camera_node src/camera_node.cpp)
 
 ament_target_dependencies(state_reporter_node rclcpp geometry_msgs tf2 tf2_geometry_msgs)
 ament_target_dependencies(motion_planner_node rclcpp geometry_msgs tf2 tf2_geometry_msgs)
 ament_target_dependencies(kinematics_node rclcpp geometry_msgs tf2 tf2_geometry_msgs)
-
+ament_target_dependencies(camera_node rclcpp geometry_msgs sensor_msgs cv_bridge OpenCV)
 #install
 install(TARGETS
   state_reporter_node
   motion_planner_node
   kinematics_node
+  camera_node
   DESTINATION lib/${PROJECT_NAME})
 
 #Install launch files
