@@ -165,7 +165,7 @@ class PygameNode(Node):
         for en_obj in self.enemy_drones_positions.keys():
             en_drone_pos = self.enemy_drones_positions[en_obj]
             en_screen_pos = self.world_to_screen((en_drone_pos[0], en_drone_pos[1]))
-            pygame.draw.circle(self.screen, (255,0,0), (en_screen_pos, 10)
+            pygame.draw.circle(self.screen, (255,0,0), en_screen_pos, 10)
         
         pygame.display.update()
                     

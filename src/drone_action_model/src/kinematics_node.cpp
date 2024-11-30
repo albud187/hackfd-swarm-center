@@ -26,7 +26,7 @@ public:
             T_RPY_pose, 10, std::bind(&KinematicsNode::RPY_pose_callback, this, std::placeholders::_1));
 
         goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-            T_goal_pose, 10, std::bind(&MotionPlannerNode::goal_pose_callback, this, std::placeholders::_1));
+            T_goal_pose, 10, std::bind(&KinematicsNode::goal_pose_callback, this, std::placeholders::_1));
 
         velocity_pub = this->create_publisher<geometry_msgs::msg::Twist>(T_cmd_vel, 60);
 

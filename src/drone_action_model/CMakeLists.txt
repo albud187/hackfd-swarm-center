@@ -21,7 +21,7 @@ find_package(sensor_msgs REQUIRED)
 #add executables
 add_executable(state_reporter_node src/state_reporter_node.cpp)
 add_executable(motion_planner_node src/motion_planner_node.cpp)
-add_executable(kinematics_node src/motion_planner_node.cpp)
+add_executable(kinematics_node src/kinematics_node.cpp)
 
 ament_target_dependencies(state_reporter_node rclcpp geometry_msgs tf2 tf2_geometry_msgs)
 ament_target_dependencies(motion_planner_node rclcpp geometry_msgs tf2 tf2_geometry_msgs)

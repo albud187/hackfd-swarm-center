@@ -63,20 +63,20 @@ private:
 
     geometry_msgs::msg::Vector3 calculate_velocity_vector(geometry_msgs::msg::PoseStamped goal_pose, geometry_msgs::msg::PoseStamped current_pose)
     {
-        float vxy_max = 20.0;
-        float vz_max = 10.0;
+        float vxy_max = 5.0;
+        float vz_max = 2.5;
 
         float dx = goal_pose.pose.position.x - current_pose.pose.position.x;
         float dy = goal_pose.pose.position.y - current_pose.pose.position.y;
         float dz = goal_pose.pose.position.z - current_pose.pose.position.z;
-        float d_mag = std::sqrt(dx * dx + dy * dy + dz * dz);
+        float d_magxy = std::sqrt(dx * dx + dy * dy);
 
         geometry_msgs::msg::Vector3 result;
         if (d_mag > 0.0)
         {
-            result.x = vxy_max * dx / d_mag;
-            result.y = vxy_max * dy / d_mag;
-            result.z = vz_max * dz / d_mag;
+            result.x = vxy_max * dx / d_magxy;
+            result.y = vxy_max * dy / d_magxy;
+            result.z = vz_max * dz / 10;
         }
         else
         {
