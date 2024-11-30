@@ -99,6 +99,13 @@ def drone_bringup(ns):
         executable="motion_planner_node",
         namespace=ns
         ),
+        Node(
+            package="drone_action_model",
+            executable="kinematics_node",
+            namespace=ns,
+            output="screen",
+            prefix="xterm -e"
+        ),
 
     ]
     return result

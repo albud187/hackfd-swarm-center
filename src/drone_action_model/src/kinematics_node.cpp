@@ -12,16 +12,21 @@ class KinematicsNode : public rclcpp::Node
 public:
 
     KinematicsNode() : Node("kinematics_node"){
+
         std::string ns = this->get_namespace();
         std::string T_velocity_vector= ns + "/cmd_vel_vector";
         std::string T_RPY_pose = ns + "/RPY_pose";
+        std::string T_goal_pose = ns + "/goal_pose";
         std::string T_cmd_vel = ns + "/cmd_vel";
+
+        velocity_vector_sub = this->create_subscription<geometry_msgs::msg::Vector3>(
+            T_velocity_vector, 10, std::bind(&KinematicsNode::velocity_vector_callback, this, std::placeholders::_1));
 
         pose_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(
             T_RPY_pose, 10, std::bind(&KinematicsNode::RPY_pose_callback, this, std::placeholders::_1));
 
-        velocity_vector_sub = this->create_subscription<geometry_msgs::msg::Vector3>(
-            T_velocity_vector, 10, std::bind(&KinematicsNode::velocity_vector_callback, this, std::placeholders::_1));
+        goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+            T_goal_pose, 10, std::bind(&MotionPlannerNode::goal_pose_callback, this, std::placeholders::_1));
 
         velocity_pub = this->create_publisher<geometry_msgs::msg::Twist>(T_cmd_vel, 60);
 
@@ -38,16 +43,23 @@ public:
 private:
     std::mutex mutex_;
 
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub;
     rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr velocity_vector_sub;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_pub;
-    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr velocity_reporter;
 
     std::thread velocity_pub_thread;
 
+    geometry_msgs::msg::PoseStamped goal_pose;
     geometry_msgs::msg::PoseStamped current_pose;
     geometry_msgs::msg::Vector3 velocity_vector;
     geometry_msgs::msg::Twist command_velocity;
+
+    void goal_pose_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        goal_pose = *msg;
+    }
 
     void RPY_pose_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -88,7 +100,10 @@ private:
     void publish_velocity_command(){
 
         while(rclcpp::ok()){
-            
+
+            std::cout<<velocity_vector.x<<std::endl;
+            std::cout<<velocity_vector.y<<std::endl;
+            std::cout<<velocity_vector.z<<std::endl;
             geometry_msgs::msg::Twist command_velocity = get_command_velocity(velocity_vector, current_pose);
             velocity_pub->publish(command_velocity);
            
@@ -104,7 +119,7 @@ int main(int argc, char *argv[]) {
     auto rclcppNode = std::make_shared<KinematicsNode>();
 
     rclcpp::spin(rclcppNode);
-
+    std::cout<<"test1"<<std::endl;
     rclcppNode->join_velocity_pub_thread();
 
     rclcpp::shutdown();

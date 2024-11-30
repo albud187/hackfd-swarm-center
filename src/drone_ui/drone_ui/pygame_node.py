@@ -33,14 +33,21 @@ class PygameNode(Node):
         #get all topics
         self.topic_list = get_topic_list()
         self.friendly_pose_topics = filter_topics(self.topic_list, "/r", "RPY_pose")
-
+        self.enemy_pose_topics = filter_topics(self.topic_list, "/t", "RPY_pose")
         #init friendly positions as 0,0
         self.friendly_drones_positions = {}
-        for t in self.friendly_pose_topics:
-            f_ns = get_ns(t)
+        for tfd in self.friendly_pose_topics:
+            f_ns = get_ns(tfd)
             self.friendly_drones_positions[f_ns] = (0,0)
 
+        #init enemy positions as 0,0
+        self.enemy_drones_positions = {}
+        for te in self.enemy_pose_topics:
+            e_ns = get_ns(te)
+            self.enemy_drones_positions[e_ns] = (0,0)
+
         self.friendly_pose_subs = {}
+        self.enemy_pose_subs = {}
         self.update_pose_subs()
        
         time.sleep(2)
@@ -56,24 +63,47 @@ class PygameNode(Node):
         self.get_logger().info(f"Updated position for {f_ns}: {self.friendly_drones_positions[f_ns]}")
 
 
+    def en_pose_cb(self, msg, e_ns):
+        """
+        Callback for enemy drone pose updates.
+        """
+        self.get_logger().info(f"Callback triggered for {e_ns}: x={msg.pose.position.x}, y={msg.pose.position.y}")
+        self.enemy_drones_positions[e_ns] = (grid_size * msg.pose.position.x, -grid_size * msg.pose.position.y)
+        self.get_logger().info(f"Updated position for {e_ns}: {self.enemy_drones_positions[e_ns]}")
+
+
+
     def update_pose_subs(self):
         """
-        Dynamically updates the pose subscribers for friendly drones.
+        Dynamically updates the pose subscribers for friendly and enemy drones.
         """
-        for t in self.friendly_pose_topics:
-            print(f"Attempting to update subscriptions for topic: {t}")
-            f_ns = get_ns(t)
+        for tfd in self.friendly_pose_topics:
+            print(f"Attempting to update subscriptions for topic: {tfd}")
+            f_ns = get_ns(tfd)
             if f_ns not in self.friendly_pose_subs:
-                self.get_logger().info(f"Creating subscription for topic: {t}")
+                self.get_logger().info(f"Creating subscription for topic: {tfd}")
                 # Use default arguments in the lambda to correctly bind the namespace
                 self.friendly_pose_subs[f_ns] = self.create_subscription(
                     PoseStamped,
-                    t,
+                    tfd,
                     lambda msg, ns=f_ns: self.fr_pose_cb(msg, ns),
                     20
                 )
                 self.get_logger().info(f"Subscription created for namespace: {f_ns}")
-
+        
+        for ted in self.enemy_pose_topics:
+            print(f"Attempting to update subscriptions for topic: {ted}")
+            e_ns = get_ns(ted)
+            if e_ns not in self.friendly_pose_subs:
+                self.get_logger().info(f"Creating subscription for topic: {ted}")
+                # Use default arguments in the lambda to correctly bind the namespace
+                self.enemy_pose_subs[e_ns] = self.create_subscription(
+                    PoseStamped,
+                    ted,
+                    lambda msg, ns=e_ns: self.en_pose_cb(msg, ns),
+                    20
+                )
+                self.get_logger().info(f"Subscription created for namespace: {e_ns}")
 
     def world_to_screen(self, world_pos):
         x = (world_pos[0] + self.camera_x) * zoom_factor
@@ -129,9 +159,13 @@ class PygameNode(Node):
         
         for fr_obj in self.friendly_drones_positions.keys():
             fr_drone_pos = self.friendly_drones_positions[fr_obj]
-            obj_screen_pos = self.world_to_screen(fr_drone_pos)
-            
-            pygame.draw.circle(self.screen, (0,0,255), obj_screen_pos, 10)
+            fr_screen_pos = self.world_to_screen(fr_drone_pos)
+            pygame.draw.circle(self.screen, (0,0,255), fr_screen_pos, 10)
+
+        for en_obj in self.enemy_drones_positions.keys():
+            en_drone_pos = self.enemy_drones_positions[en_obj]
+            en_screen_pos = self.world_to_screen(en_drone_pos)
+            pygame.draw.circle(self.screen, (255,0,0), en_screen_pos, 10)
         
         pygame.display.update()
                     
