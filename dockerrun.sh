@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Container name
@@ -13,7 +12,7 @@ xhost +local:docker
 # Check if the container is already running
 if [ "$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
     echo "Container is already running. Connecting..."
-    docker exec -it ${CONTAINER_NAME} bash
+    docker exec -it ${CONTAINER_NAME} bash entrypoint.sh
 else
     echo "Starting the Docker container..."
     # Run the Docker container with GUI support and custom startup command

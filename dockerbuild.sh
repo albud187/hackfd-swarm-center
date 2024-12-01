@@ -1,3 +1,3 @@
 #!/bin/bash
 
-#docker build -t CONTAINER-NAME .
+docker build -t swarm-ui-ws .
