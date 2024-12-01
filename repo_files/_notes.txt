@@ -9,5 +9,5 @@ Future work:
 - additional mission profiles
 - note that same software that works on sim also works in real life robots
 
-conclusion:
+conclusion/sum up:
 - Overall, single operator control of drone swarms would grant the Canadian soldier scalable, precise and agile ISR and strike capabilities.
