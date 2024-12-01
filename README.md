@@ -73,6 +73,8 @@ Building and running the container
 
 `bash entrypoint.sh`
 
+`source install/setup.bash`
+
 If you only want to build one package (not both), you can execute either:
 
 `colcon build --packages-select drone_action_model`
