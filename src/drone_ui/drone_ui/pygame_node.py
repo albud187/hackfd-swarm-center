@@ -2,7 +2,6 @@ import pygame
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Vector3, PoseStamped
-from drone_ui.utils._constants import *
 from drone_ui.utils.topic_tools import (get_topic_list, filter_topics, get_ns)
 from drone_ui.utils.ui_tools import (world_to_screen, 
                                      draw_objects, 
@@ -11,9 +10,6 @@ from drone_ui.utils.ui_tools import (world_to_screen,
                                      draw_menu, handle_menu_selection,)
 import pprint
 import time
-
-grid_scale = 4.0
-
 
 FPS = 60
 screen_width = 650

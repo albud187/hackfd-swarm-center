@@ -1,1 +1,13 @@
+Swarm_Center application
+- enables a single operator to control a team of drones thru a graphical user interface (ui)
 
+- provides command + control and situational awareness of drones
+- movement and strike tasks can assigned to one or multiple drones with multiple targets
+
+Future work:
+- integrating real robots
+- additional mission profiles
+- note that same software that works on sim also works in real life robots
+
+conclusion:
+- Overall, single operator control of drone swarms would grant the Canadian soldier scalable, precise and agile ISR and strike capabilities.
