@@ -16,8 +16,8 @@ grid_scale = 4.0
 
 
 FPS = 60
-screen_width = 800
-screen_height = 800
+screen_width = 650
+screen_height = 650
 
 # Variables for selection rectangle
 is_drawing_rect = False
@@ -177,7 +177,7 @@ class PygameNode(Node):
                 else:
                     print("Mouse click outside menu bounds")
                     self.context_menu_visible = False
-                    
+
             # Panning the view with arrow keys
             elif event.type == pygame.KEYDOWN:
                 

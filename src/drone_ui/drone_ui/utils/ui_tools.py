@@ -33,9 +33,7 @@ def draw_objects(pg_node):
     Draw friendly and enemy drones, with namespaces visible.
     """
     # Create a bold font
-    font = pygame.font.Font(None, 12)  # Default font, size 24
-    font_bold = pygame.font.Font(None, 12)
-    font_bold.set_bold(True)
+    ui_font = pygame.font.Font(None, 18)
 
     # Draw friendly drones
     for fr_obj, fr_drone_pos in pg_node.friendly_drones_positions.items():
@@ -44,7 +42,7 @@ def draw_objects(pg_node):
         pygame.draw.circle(pg_node.screen, color, fr_screen_pos, 7)
 
         # Render the namespace as text
-        namespace_surface = font_bold.render(fr_obj, True, (0, 0, 255))  # blue text
+        namespace_surface = ui_font.render(fr_obj, True, (0, 0, 255))  # blue text
         pg_node.screen.blit(namespace_surface, (fr_screen_pos[0] + 12, fr_screen_pos[1] - 12))  # Offset text slightly
 
     # Draw enemy drones
@@ -63,15 +61,14 @@ def draw_objects(pg_node):
         pygame.draw.circle(pg_node.screen, color, en_screen_pos, 7)
 
         # Render the namespace as text
-        namespace_surface = font_bold.render(en_obj, True, (255, 0, 0))  # red text
+        namespace_surface = ui_font.render(en_obj, True, (255, 0, 0))  # red text
         pg_node.screen.blit(namespace_surface, (en_screen_pos[0] + 12, en_screen_pos[1] - 12))  # Offset text slightly
 
-    # draw origin dots
-     # Draw origin markers
+
     origin_marker_locations = generate_origin_markers(pg_node, 4)
     for marker in origin_marker_locations:
         marker_pos = world_to_screen(pg_node, marker)
-        pygame.draw.circle(pg_node.screen, (0, 0, 0), marker_pos, 3)
+        pygame.draw.circle(pg_node.screen, (0, 0, 0), marker_pos, 2)
 
 def get_selected_objects(pg_node, start_pos, end_pos):
     """
