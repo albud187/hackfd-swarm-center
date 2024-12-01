@@ -152,7 +152,7 @@ private:
 
             if (local_goal_pose.header.frame_id == "2"){
                 geometry_msgs::msg::Vector3 desired_velocity = calculate_goal_velocity(
-                    local_goal_pose, local_current_pose, 15.0, 5.0, 5.0);
+                    local_goal_pose, local_current_pose, 11.0, 5.0, 5.0);
                 velocity_vector = ramp_velocity(velocity_vector, desired_velocity, 1.0);
                 velocity_vector_pub->publish(velocity_vector);
             }

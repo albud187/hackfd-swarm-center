@@ -51,8 +51,15 @@ def draw_objects(pg_node):
     for en_obj, en_drone_pos in pg_node.enemy_drones_positions.items():
         en_screen_pos = world_to_screen(pg_node, en_drone_pos["ui"])
         
-        color = (150, 0, 0) if en_obj in pg_node.selected_targets else (255, 0, 0)
-        color = (0, 0, 0) if en_obj in pg_node.locked_targets else (255, 0, 0)
+        color = (255, 0, 0)
+        if en_obj in pg_node.locked_targets:
+            color = (0,0,0)
+        if en_obj in pg_node.selected_targets and en_obj not in pg_node.locked_targets:
+            color = (150,0,0)
+
+        # e
+        # color = (150, 0, 0) if en_obj in pg_node.selected_targets else (255, 0, 0)
+        # color = (0, 0, 0) if en_obj in pg_node.locked_targets else (255, 0, 0)
         pygame.draw.circle(pg_node.screen, color, en_screen_pos, 7)
 
         # Render the namespace as text
