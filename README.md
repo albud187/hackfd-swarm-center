@@ -1,6 +1,10 @@
 
 # Project Description
 
+Project for the Canadian Army's hackathon - HackFD.
+
+Video presentation: [https://www.youtube.com/watch?v=oz5VWCD9Aak](url)
+
 This repository contains two ROS2 packages in the  `src` directory: `drone_action_model`  `drone_ui`.
 
 `drone_action_model` is the ROS2 package that implements motion planning and kinematics for a team of drones
